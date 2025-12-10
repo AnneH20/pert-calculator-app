@@ -8,6 +8,7 @@ class PertSection extends StatelessWidget {
   final int rowCount;
   final Color backgroundColor;
   final void Function()? onComplete;
+  final void Function()? onSectionComplete;
 
   final double Function(PertRow) valueGetter;
 
@@ -31,6 +32,7 @@ class PertSection extends StatelessWidget {
     required this.focusNodeGetter,
     this.getNextFocusNode,
     this.onComplete,
+    this.onSectionComplete,
   });
 
   double _total() => rows.fold(0.0, (s, r) => s + valueGetter(r));
@@ -108,10 +110,15 @@ class PertSection extends StatelessWidget {
               final nextFocus = getNextFocusNode?.call(index);
               if (nextFocus != null) {
                 nextFocus.requestFocus();
+                // Check if we're moving to a different section
+                if (index == rows.length - 1) {
+                  // Last field in section - moving to next section
+                  onSectionComplete?.call();
+                }
               } else {
                 FocusScope.of(context).unfocus();
               }
-              // call parent callback (used to scroll to next section)
+              // call parent callback for any completion
               onComplete?.call();
             },
             onTapOutside: (_) {

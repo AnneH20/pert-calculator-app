@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.pert" "\0"
-            VALUE "FileDescription", "pert" "\0"
+            VALUE "FileDescription", "PERT Calculator" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "pert" "\0"
+            VALUE "InternalName", "PERT Calculator" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.pert. All rights reserved." "\0"
             VALUE "OriginalFilename", "pert.exe" "\0"
-            VALUE "ProductName", "pert" "\0"
+            VALUE "ProductName", "PERT Calculator" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

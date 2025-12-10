@@ -1,6 +1,6 @@
 {
-    "name": "pert",
-    "short_name": "pert",
+    "name": "PERT Calculator",
+    "short_name": "PERT Calc",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

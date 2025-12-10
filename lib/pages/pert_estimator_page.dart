@@ -58,15 +58,6 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     return null;
   }
 
-  double _averageOf(double Function(PertRow) getter) {
-    final nonZero = rows.where((r) => getter(r) > 0).toList();
-    if (nonZero.isEmpty) return 0.0;
-    return nonZero.fold(0.0, (s, r) => s + getter(r)) / nonZero.length;
-  }
-
-  bool _sectionComplete(double Function(PertRow) getter) {
-    return rows.every((r) => getter(r) > 0);
-  }
 
   void _scrollToKey(GlobalKey key) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -79,12 +70,6 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
         );
       }
     });
-  }
-
-  void _checkAndScrollToNext(double Function(PertRow) getter, GlobalKey key) {
-    if (_sectionComplete(getter)) {
-      _scrollToKey(key);
-    }
   }
 
   void _addRow() {
@@ -139,11 +124,15 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 rowCount: rowCount,
                 backgroundColor: Colors.green.shade200,
                 valueGetter: (r) => r.optimistic,
-                valueSetter: (r, v) => r.optimistic = v,
+                valueSetter: (r, v) {
+                  setState(() {
+                    r.optimistic = v;
+                  });
+                },
                 controllerGetter: (r) => r.optimisticCtrl,
                 focusNodeGetter: (r) => r.optimisticFocus,
                 getNextFocusNode: (index) => _getNextFocusNode('optimistic', index),
-                onComplete: () => _checkAndScrollToNext((r) => r.optimistic, _mostLikelyKey),
+                onSectionComplete: () => _scrollToKey(_mostLikelyKey),
               ),
               const SizedBox(height: 24),
               PertSection(
@@ -153,11 +142,15 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 rowCount: rowCount,
                 backgroundColor: Colors.blue.shade200,
                 valueGetter: (r) => r.mostLikely,
-                valueSetter: (r, v) => r.mostLikely = v,
+                valueSetter: (r, v) {
+                  setState(() {
+                    r.mostLikely = v;
+                  });
+                },
                 controllerGetter: (r) => r.mostLikelyCtrl,
                 focusNodeGetter: (r) => r.mostLikelyFocus,
                 getNextFocusNode: (index) => _getNextFocusNode('mostLikely', index),
-                onComplete: () => _checkAndScrollToNext((r) => r.mostLikely, _pessimisticKey),
+                onSectionComplete: () => _scrollToKey(_pessimisticKey),
               ),
               const SizedBox(height: 24),
               PertSection(
@@ -167,11 +160,15 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 rowCount: rowCount,
                 backgroundColor: Colors.red.shade200,
                 valueGetter: (r) => r.pessimistic,
-                valueSetter: (r, v) => r.pessimistic = v,
+                valueSetter: (r, v) {
+                  setState(() {
+                    r.pessimistic = v;
+                  });
+                },
                 controllerGetter: (r) => r.pessimisticCtrl,
                 focusNodeGetter: (r) => r.pessimisticFocus,
                 getNextFocusNode: (index) => _getNextFocusNode('pessimistic', index),
-                onComplete: () => _checkAndScrollToNext((r) => r.pessimistic, _totalsKey),
+                onSectionComplete: () => _scrollToKey(_totalsKey),
               ),
               const SizedBox(height: 24),
               TotalsSection(
