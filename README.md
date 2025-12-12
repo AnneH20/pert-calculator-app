@@ -1,9 +1,12 @@
 # PERT Calculator App
 
-Creating a PERT calculator app in Flutter
+PERT calculator app in Flutter
 
 ## Getting Started
 
-This should just work out of the box. Just connect an IOS simulator, Android emulator, or just hit the Play/Debug button to start up the app locally. 
+This should work. Pull down master and run it with any emulator. Or view the app on this GitHub page: https://anneh20.github.io/pert-calculator-app/
 
-To get the app on a physical device, that takes more work. (TBD)
+## App Demo
+
+https://github.com/user-attachments/assets/bfac151b-f410-499f-ac5c-9ebee0b19df3
+
