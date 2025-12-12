@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/pert_row.dart';
+import '../models/pert_utils.dart';
 
 class PertSection extends StatelessWidget {
   final String title;
   final List<PertRow> rows;
-  final int rowCount;
   final Color backgroundColor;
-  final void Function()? onComplete;
   final void Function()? onSectionComplete;
 
   final double Function(PertRow) valueGetter;
@@ -24,53 +23,43 @@ class PertSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.rows,
-    required this.rowCount,
     required this.backgroundColor,
     required this.valueGetter,
     required this.valueSetter,
     required this.controllerGetter,
     required this.focusNodeGetter,
     this.getNextFocusNode,
-    this.onComplete,
     this.onSectionComplete,
   });
 
   double total() => rows.fold(0.0, (s, r) => s + valueGetter(r));
 
-  double average() {
-    final nonZero = rows.where((r) => valueGetter(r) > 0).toList();
-    if (nonZero.isEmpty) return 0.0;
-    final total = nonZero.fold(0.0, (s, r) => s + valueGetter(r));
-    return total / nonZero.length;
-  }
+  double average() => calculateAverage(rows, valueGetter);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            ...List.generate(rowCount, (i) => buildTextField(context, i)),
-            const Divider(height: 24, thickness: 2, color: Colors.black),
-            buildRow('Total:', total()),
-            buildRow('Average:', average()),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          ...List.generate(rows.length, (i) => buildTextField(context, i)),
+          const Divider(height: 24, thickness: 2, color: Colors.black),
+          buildRow('Total:', total()),
+          buildRow('Average:', average()),
+        ],
       ),
     );
   }
@@ -79,10 +68,6 @@ class PertSection extends StatelessWidget {
     final row = rows[index];
     final controller = controllerGetter(row);
     final focusNode = focusNodeGetter(row);
-
-    if (controller.text.isEmpty && valueGetter(row) > 0) {
-      controller.text = valueGetter(row).toString();
-    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -122,18 +107,9 @@ class PertSection extends StatelessWidget {
                   onSectionComplete?.call();
                 }
               }
-              onComplete?.call();
             },
             onTapOutside: (_) {
-              final isLastField = index == rows.length - 1;
-
               FocusScope.of(context).unfocus();
-
-              if (isLastField) {
-                onSectionComplete?.call();
-              }
-
-              onComplete?.call();
             },
           ),
         ),

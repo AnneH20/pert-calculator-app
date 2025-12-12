@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/estimate_type.dart';
 import '../models/pert_row.dart';
 import '../widgets/pert_section.dart';
 import '../widgets/totals_section.dart';
@@ -11,19 +12,20 @@ class PertEstimatorPage extends StatefulWidget {
 }
 
 class PertEstimatorPageState extends State<PertEstimatorPage> {
+  static const int defaultRowCount = 5;
+
   final ScrollController scrollController = ScrollController();
 
-  final GlobalKey mostLikelyKey = GlobalKey();
-  final GlobalKey pessimisticKey = GlobalKey();
-  final GlobalKey<State<TotalsSection>> totalsKey = GlobalKey<State<TotalsSection>>();
+  final GlobalKey mostLikelyKey = GlobalKey(debugLabel: 'mostLikelySection');
+  final GlobalKey pessimisticKey = GlobalKey(debugLabel: 'pessimisticSection');
+  final GlobalKey<TotalsSectionState> totalsKey = GlobalKey<TotalsSectionState>();
 
   List<PertRow> rows = [];
-  int get rowCount => rows.length;
 
   @override
   void initState() {
     super.initState();
-    rows = List.generate(5, (_) => PertRow());
+    rows = List.generate(defaultRowCount, (_) => PertRow());
   }
 
   @override
@@ -35,30 +37,31 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
     super.dispose();
   }
 
-  FocusNode? getNextFocusNode(String currentSection, int currentIndex) {
+  FocusNode? getNextFocusNode(EstimateType currentSection, int currentIndex) {
+    if (rows.isEmpty) return null;
+
     if (currentIndex < rows.length - 1) {
       switch (currentSection) {
-        case 'optimistic':
+        case EstimateType.optimistic:
           return rows[currentIndex + 1].optimisticFocus;
-        case 'mostLikely':
+        case EstimateType.mostLikely:
           return rows[currentIndex + 1].mostLikelyFocus;
-        case 'pessimistic':
+        case EstimateType.pessimistic:
           return rows[currentIndex + 1].pessimisticFocus;
       }
     } else {
       switch (currentSection) {
-        case 'optimistic':
+        case EstimateType.optimistic:
           return rows[0].mostLikelyFocus;
-        case 'mostLikely':
+        case EstimateType.mostLikely:
           return rows[0].pessimisticFocus;
-        case 'pessimistic':
+        case EstimateType.pessimistic:
           return null;
       }
     }
-    return null;
   }
 
-  void scrollToKey(GlobalKey key, {bool ensureBottomContent = false}) {
+  void scrollToKey(GlobalKey key) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = key.currentContext;
       if (context != null && mounted) {
@@ -97,10 +100,7 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
         r.pessimisticCtrl.clear();
       }
     });
-    final totalsState = totalsKey.currentState;
-    if (totalsState != null) {
-      (totalsState as dynamic).clearResults();
-    }
+    totalsKey.currentState?.clearResults();
 
     FocusScope.of(context).unfocus();
 
@@ -134,7 +134,6 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
               PertSection(
                 title: 'Optimistic',
                 rows: rows,
-                rowCount: rowCount,
                 backgroundColor: Colors.green.shade200,
                 valueGetter: (r) => r.optimistic,
                 valueSetter: (r, v) {
@@ -144,7 +143,7 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.optimisticCtrl,
                 focusNodeGetter: (r) => r.optimisticFocus,
-                getNextFocusNode: (index) => getNextFocusNode('optimistic', index),
+                getNextFocusNode: (index) => getNextFocusNode(EstimateType.optimistic, index),
                 onSectionComplete: () => scrollToKey(mostLikelyKey),
               ),
               const SizedBox(height: 24),
@@ -152,7 +151,6 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
                 key: mostLikelyKey,
                 title: 'Most Likely',
                 rows: rows,
-                rowCount: rowCount,
                 backgroundColor: Colors.blue.shade200,
                 valueGetter: (r) => r.mostLikely,
                 valueSetter: (r, v) {
@@ -162,7 +160,7 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.mostLikelyCtrl,
                 focusNodeGetter: (r) => r.mostLikelyFocus,
-                getNextFocusNode: (index) => getNextFocusNode('mostLikely', index),
+                getNextFocusNode: (index) => getNextFocusNode(EstimateType.mostLikely, index),
                 onSectionComplete: () => scrollToKey(pessimisticKey),
               ),
               const SizedBox(height: 24),
@@ -170,7 +168,6 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
                 key: pessimisticKey,
                 title: 'Pessimistic',
                 rows: rows,
-                rowCount: rowCount,
                 backgroundColor: Colors.red.shade200,
                 valueGetter: (r) => r.pessimistic,
                 valueSetter: (r, v) {
@@ -180,8 +177,8 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.pessimisticCtrl,
                 focusNodeGetter: (r) => r.pessimisticFocus,
-                getNextFocusNode: (index) => getNextFocusNode('pessimistic', index),
-                onSectionComplete: () => scrollToKey(totalsKey, ensureBottomContent: true),
+                getNextFocusNode: (index) => getNextFocusNode(EstimateType.pessimistic, index),
+                onSectionComplete: () => scrollToKey(totalsKey),
               ),
               const SizedBox(height: 24),
               TotalsSection(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../config/holidays_config.dart';
 import '../models/pert_row.dart';
+import '../models/pert_utils.dart';
 
 class TotalsSection extends StatefulWidget {
   final List<PertRow> rows;
@@ -13,6 +15,9 @@ class TotalsSection extends StatefulWidget {
 }
 
 class TotalsSectionState extends State<TotalsSection> {
+  static const int maxBusinessDays = 1000;
+  static final DateFormat dateFormatter = DateFormat('EEEE, MMMM d, y');
+
   String? includingDayResult;
   String? nextDayResult;
 
@@ -23,31 +28,10 @@ class TotalsSectionState extends State<TotalsSection> {
     });
   }
 
-  // List of holidays to exclude from PERT date calculations
-  final List<DateTime> holidays = [
-    DateTime(2025, 12, 24), // Christmas Eve 2025
-    DateTime(2025, 12, 25), // Christmas Day 2025
-    DateTime(2025, 12, 26), // Christmas Celebration 2025
-    DateTime(2026, 1, 1),   // New Year's Day 2026
-    DateTime(2026, 1, 2),   // New Year's Day Celebration 2026
-    DateTime(2026, 4, 3), // Good Friday 2026
-    DateTime(2026, 5, 25), // Memorial Day 2026
-    DateTime(2026, 7, 3), // Independence Day Celebration 2026
-    DateTime(2026, 9, 7), // Labor Day 2026
-    DateTime(2026, 11, 26), // Thanksgiving Day 2026
-    DateTime(2026, 11, 27), // Day After Thanksgiving 2026
-    DateTime(2026, 12, 24), // Christmas Eve 2026
-    DateTime(2026, 12, 25), // Christmas Day 2026
-    DateTime(2026, 12, 31), // New Year's Eve 2026
-    DateTime(2027, 1, 1), // New Year's Day 2027
-  ];
+  List<DateTime> get holidays => HolidaysConfig.holidays;
 
-  double averageOf(double Function(PertRow) getter) {
-    final nonZero = widget.rows.where((r) => getter(r) > 0).toList();
-    if (nonZero.isEmpty) return 0.0;
-    final total = nonZero.fold(0.0, (s, r) => s + getter(r));
-    return total / nonZero.length;
-  }
+  double averageOf(double Function(PertRow) getter) =>
+      calculateAverage(widget.rows, getter);
 
   DateTime addBusinessDays(DateTime startDate, int businessDays, bool includeToday) {
     DateTime current = startDate;
@@ -78,37 +62,30 @@ class TotalsSectionState extends State<TotalsSection> {
         holiday.day == date.day);
   }
 
-  void calculateIncludingDay(int pertEstimate) {
+  void calculateCommitmentDates(int pertEstimate) {
     if (pertEstimate <= 0) {
       setState(() {
         includingDayResult = 'Invalid estimate';
-      });
-      return;
-    }
-
-    final today = DateTime.now();
-    final resultDate = addBusinessDays(today, pertEstimate, true);
-    final formatter = DateFormat('EEEE, MMMM d, y');
-
-    setState(() {
-      includingDayResult = formatter.format(resultDate);
-    });
-  }
-
-  void calculateNextDay(int pertEstimate) {
-    if (pertEstimate <= 0) {
-      setState(() {
         nextDayResult = 'Invalid estimate';
       });
       return;
     }
 
+    if (pertEstimate > maxBusinessDays) {
+      setState(() {
+        includingDayResult = 'Estimate too large (max $maxBusinessDays days)';
+        nextDayResult = 'Estimate too large (max $maxBusinessDays days)';
+      });
+      return;
+    }
+
     final today = DateTime.now();
-    final resultDate = addBusinessDays(today, pertEstimate, false);
-    final formatter = DateFormat('EEEE, MMMM d, y');
+    final includingDate = addBusinessDays(today, pertEstimate, true);
+    final nextDayDate = addBusinessDays(today, pertEstimate, false);
 
     setState(() {
-      nextDayResult = formatter.format(resultDate);
+      includingDayResult = dateFormatter.format(includingDate);
+      nextDayResult = dateFormatter.format(nextDayDate);
     });
   }
 
@@ -147,8 +124,7 @@ class TotalsSectionState extends State<TotalsSection> {
             child: ElevatedButton(
               onPressed: pertInt > 0
                   ? () {
-                      calculateIncludingDay(pertInt);
-                      calculateNextDay(pertInt);
+                      calculateCommitmentDates(pertInt);
                       widget.onCalculate?.call();
                     }
                   : null,
@@ -168,57 +144,9 @@ class TotalsSectionState extends State<TotalsSection> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Including Today:',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        includingDayResult!,
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+                buildResultCard('Including Today:', includingDayResult!, Colors.blue),
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Starting Next Day:',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        nextDayResult!,
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+                buildResultCard('Starting Next Day:', nextDayResult!, Colors.green),
               ],
             ),
           ],
@@ -245,6 +173,34 @@ class TotalsSectionState extends State<TotalsSection> {
           Text(
             value.toStringAsFixed(2),
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildResultCard(String title, String result, MaterialColor color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            result,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
