@@ -105,19 +105,31 @@ class PertSection extends StatelessWidget {
               valueSetter(row, parsed);
             },
             onSubmitted: (_) {
+              final isLastField = index == rows.length - 1;
+
               final nextFocus = getNextFocusNode?.call(index);
               if (nextFocus != null) {
                 nextFocus.requestFocus();
-                if (index == rows.length - 1) {
+                if (isLastField) {
                   onSectionComplete?.call();
                 }
               } else {
                 FocusScope.of(context).unfocus();
+                if (isLastField) {
+                  onSectionComplete?.call();
+                }
               }
               onComplete?.call();
             },
             onTapOutside: (_) {
+              final isLastField = index == rows.length - 1;
+
               FocusScope.of(context).unfocus();
+
+              if (isLastField) {
+                onSectionComplete?.call();
+              }
+
               onComplete?.call();
             },
           ),

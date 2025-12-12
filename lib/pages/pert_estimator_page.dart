@@ -15,7 +15,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
 
   final GlobalKey _mostLikelyKey = GlobalKey();
   final GlobalKey _pessimisticKey = GlobalKey();
-  final GlobalKey _totalsKey = GlobalKey();
+  final GlobalKey<State<TotalsSection>> _totalsKey = GlobalKey<State<TotalsSection>>();
 
   List<PertRow> rows = [];
   int get rowCount => rows.length;
@@ -59,16 +59,21 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
   }
 
 
-  void _scrollToKey(GlobalKey key) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = key.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      }
+  void _scrollToKey(GlobalKey key, {bool ensureBottomContent = false}) {
+    final delay = ensureBottomContent ? const Duration(milliseconds: 250) : Duration.zero;
+
+    Future.delayed(delay, () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = key.currentContext;
+        if (context != null && mounted) {
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            alignment: ensureBottomContent ? 0.15 : 0.88,
+          );
+        }
+      });
     });
   }
 
@@ -97,7 +102,20 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
         r.pessimisticCtrl.clear();
       }
     });
+    final totalsState = _totalsKey.currentState;
+    if (totalsState != null) {
+      (totalsState as dynamic).clearResults();
+    }
+
     FocusScope.of(context).unfocus();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
@@ -168,12 +186,21 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 controllerGetter: (r) => r.pessimisticCtrl,
                 focusNodeGetter: (r) => r.pessimisticFocus,
                 getNextFocusNode: (index) => _getNextFocusNode('pessimistic', index),
-                onSectionComplete: () => _scrollToKey(_totalsKey),
+                onSectionComplete: () => _scrollToKey(_totalsKey, ensureBottomContent: true),
               ),
               const SizedBox(height: 24),
               TotalsSection(
                 key: _totalsKey,
                 rows: rows,
+                onCalculate: () {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  });
+                },
               ),
               const SizedBox(height: 24),
 

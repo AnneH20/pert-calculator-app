@@ -4,8 +4,9 @@ import '../models/pert_row.dart';
 
 class TotalsSection extends StatefulWidget {
   final List<PertRow> rows;
+  final VoidCallback? onCalculate;
 
-  const TotalsSection({super.key, required this.rows});
+  const TotalsSection({super.key, required this.rows, this.onCalculate});
 
   @override
   State<TotalsSection> createState() => _TotalsSectionState();
@@ -14,6 +15,13 @@ class TotalsSection extends StatefulWidget {
 class _TotalsSectionState extends State<TotalsSection> {
   String? _includingDayResult;
   String? _nextDayResult;
+
+  void clearResults() {
+    setState(() {
+      _includingDayResult = null;
+      _nextDayResult = null;
+    });
+  }
 
   // List of Ramsey Solutions holidays to exclude from PERT date calculations
   final List<DateTime> _holidays = [
@@ -64,7 +72,6 @@ class _TotalsSectionState extends State<TotalsSection> {
   }
 
   bool _isHoliday(DateTime date) {
-    // Check if the date matches any holiday (compare year, month, day only)
     return _holidays.any((holiday) =>
         holiday.year == date.year &&
         holiday.month == date.month &&
@@ -142,6 +149,7 @@ class _TotalsSectionState extends State<TotalsSection> {
                   ? () {
                       _calculateIncludingDay(pertInt);
                       _calculateNextDay(pertInt);
+                      widget.onCalculate?.call();
                     }
                   : null,
               style: ElevatedButton.styleFrom(
