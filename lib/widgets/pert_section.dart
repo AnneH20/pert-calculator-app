@@ -46,28 +46,31 @@ class PertSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ...List.generate(rowCount, (i) => buildTextField(context, i)),
-          const Divider(height: 24, thickness: 2, color: Colors.black),
-          buildRow('Total:', total()),
-          buildRow('Average:', average()),
-        ],
+            const SizedBox(height: 16),
+            ...List.generate(rowCount, (i) => buildTextField(context, i)),
+            const Divider(height: 24, thickness: 2, color: Colors.black),
+            buildRow('Total:', total()),
+            buildRow('Average:', average()),
+          ],
+        ),
       ),
     );
   }

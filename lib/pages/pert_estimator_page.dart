@@ -58,22 +58,17 @@ class PertEstimatorPageState extends State<PertEstimatorPage> {
     return null;
   }
 
-
   void scrollToKey(GlobalKey key, {bool ensureBottomContent = false}) {
-    final delay = ensureBottomContent ? const Duration(milliseconds: 250) : Duration.zero;
-
-    Future.delayed(delay, () {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = key.currentContext;
-        if (context != null && mounted) {
-          Scrollable.ensureVisible(
-            context,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            alignment: ensureBottomContent ? 0.15 : 0.88,
-          );
-        }
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = key.currentContext;
+      if (context != null && mounted) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
     });
   }
 
