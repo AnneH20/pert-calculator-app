@@ -35,9 +35,9 @@ class PertSection extends StatelessWidget {
     this.onSectionComplete,
   });
 
-  double _total() => rows.fold(0.0, (s, r) => s + valueGetter(r));
+  double total() => rows.fold(0.0, (s, r) => s + valueGetter(r));
 
-  double _average() {
+  double average() {
     final nonZero = rows.where((r) => valueGetter(r) > 0).toList();
     if (nonZero.isEmpty) return 0.0;
     final total = nonZero.fold(0.0, (s, r) => s + valueGetter(r));
@@ -63,16 +63,16 @@ class PertSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...List.generate(rowCount, (i) => _buildTextField(context, i)),
+          ...List.generate(rowCount, (i) => buildTextField(context, i)),
           const Divider(height: 24, thickness: 2, color: Colors.black),
-          _buildRow('Total:', _total()),
-          _buildRow('Average:', _average()),
+          buildRow('Total:', total()),
+          buildRow('Average:', average()),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(BuildContext context, int index) {
+  Widget buildTextField(BuildContext context, int index) {
     final row = rows[index];
     final controller = controllerGetter(row);
     final focusNode = focusNodeGetter(row);
@@ -138,7 +138,7 @@ class PertSection extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, double value) {
+  Widget buildRow(String label, double value) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Row(

@@ -7,15 +7,15 @@ class PertEstimatorPage extends StatefulWidget {
   const PertEstimatorPage({super.key});
 
   @override
-  State<PertEstimatorPage> createState() => _PertEstimatorPageState();
+  State<PertEstimatorPage> createState() => PertEstimatorPageState();
 }
 
-class _PertEstimatorPageState extends State<PertEstimatorPage> {
-  final ScrollController _scrollController = ScrollController();
+class PertEstimatorPageState extends State<PertEstimatorPage> {
+  final ScrollController scrollController = ScrollController();
 
-  final GlobalKey _mostLikelyKey = GlobalKey();
-  final GlobalKey _pessimisticKey = GlobalKey();
-  final GlobalKey<State<TotalsSection>> _totalsKey = GlobalKey<State<TotalsSection>>();
+  final GlobalKey mostLikelyKey = GlobalKey();
+  final GlobalKey pessimisticKey = GlobalKey();
+  final GlobalKey<State<TotalsSection>> totalsKey = GlobalKey<State<TotalsSection>>();
 
   List<PertRow> rows = [];
   int get rowCount => rows.length;
@@ -31,11 +31,11 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     for (final r in rows) {
       r.dispose();
     }
-    _scrollController.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
-  FocusNode? _getNextFocusNode(String currentSection, int currentIndex) {
+  FocusNode? getNextFocusNode(String currentSection, int currentIndex) {
     if (currentIndex < rows.length - 1) {
       switch (currentSection) {
         case 'optimistic':
@@ -59,7 +59,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
   }
 
 
-  void _scrollToKey(GlobalKey key, {bool ensureBottomContent = false}) {
+  void scrollToKey(GlobalKey key, {bool ensureBottomContent = false}) {
     final delay = ensureBottomContent ? const Duration(milliseconds: 250) : Duration.zero;
 
     Future.delayed(delay, () {
@@ -77,13 +77,13 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     });
   }
 
-  void _addRow() {
+  void addRow() {
     setState(() {
       rows.add(PertRow());
     });
   }
 
-  void _removeRow() {
+  void removeRow() {
     if (rows.length <= 1) return;
     setState(() {
       final removed = rows.removeLast();
@@ -91,7 +91,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     });
   }
 
-  void _resetAll() {
+  void resetAll() {
     setState(() {
       for (final r in rows) {
         r.optimistic = 0.0;
@@ -102,7 +102,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
         r.pessimisticCtrl.clear();
       }
     });
-    final totalsState = _totalsKey.currentState;
+    final totalsState = totalsKey.currentState;
     if (totalsState != null) {
       (totalsState as dynamic).clearResults();
     }
@@ -110,7 +110,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     FocusScope.of(context).unfocus();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
+      scrollController.animateTo(
         0.0,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
@@ -129,12 +129,12 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
-          controller: _scrollController,
+          controller: scrollController,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildRowButtons(),
+              buildRowButtons(),
               const SizedBox(height: 24),
               PertSection(
                 title: 'Optimistic',
@@ -149,12 +149,12 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.optimisticCtrl,
                 focusNodeGetter: (r) => r.optimisticFocus,
-                getNextFocusNode: (index) => _getNextFocusNode('optimistic', index),
-                onSectionComplete: () => _scrollToKey(_mostLikelyKey),
+                getNextFocusNode: (index) => getNextFocusNode('optimistic', index),
+                onSectionComplete: () => scrollToKey(mostLikelyKey),
               ),
               const SizedBox(height: 24),
               PertSection(
-                key: _mostLikelyKey,
+                key: mostLikelyKey,
                 title: 'Most Likely',
                 rows: rows,
                 rowCount: rowCount,
@@ -167,12 +167,12 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.mostLikelyCtrl,
                 focusNodeGetter: (r) => r.mostLikelyFocus,
-                getNextFocusNode: (index) => _getNextFocusNode('mostLikely', index),
-                onSectionComplete: () => _scrollToKey(_pessimisticKey),
+                getNextFocusNode: (index) => getNextFocusNode('mostLikely', index),
+                onSectionComplete: () => scrollToKey(pessimisticKey),
               ),
               const SizedBox(height: 24),
               PertSection(
-                key: _pessimisticKey,
+                key: pessimisticKey,
                 title: 'Pessimistic',
                 rows: rows,
                 rowCount: rowCount,
@@ -185,17 +185,17 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
                 },
                 controllerGetter: (r) => r.pessimisticCtrl,
                 focusNodeGetter: (r) => r.pessimisticFocus,
-                getNextFocusNode: (index) => _getNextFocusNode('pessimistic', index),
-                onSectionComplete: () => _scrollToKey(_totalsKey, ensureBottomContent: true),
+                getNextFocusNode: (index) => getNextFocusNode('pessimistic', index),
+                onSectionComplete: () => scrollToKey(totalsKey, ensureBottomContent: true),
               ),
               const SizedBox(height: 24),
               TotalsSection(
-                key: _totalsKey,
+                key: totalsKey,
                 rows: rows,
                 onCalculate: () {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollController.animateTo(
-                      _scrollController.position.maxScrollExtent,
+                    scrollController.animateTo(
+                      scrollController.position.maxScrollExtent,
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.easeInOut,
                     );
@@ -205,7 +205,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
               const SizedBox(height: 24),
 
               ElevatedButton(
-                onPressed: _resetAll,
+                onPressed: resetAll,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -221,14 +221,14 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
     );
   }
 
-  Widget _buildRowButtons() {
+  Widget buildRowButtons() {
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 12,
       runSpacing: 12,
       children: [
         ElevatedButton.icon(
-          onPressed: _addRow,
+          onPressed: addRow,
           icon: const Icon(Icons.add, size: 20),
           label: const Text('Add Number'),
           style: ElevatedButton.styleFrom(
@@ -238,7 +238,7 @@ class _PertEstimatorPageState extends State<PertEstimatorPage> {
           ),
         ),
         ElevatedButton.icon(
-          onPressed: rows.length > 1 ? _removeRow : null,
+          onPressed: rows.length > 1 ? removeRow : null,
           icon: const Icon(Icons.remove, size: 20),
           label: const Text('Remove Number'),
           style: ElevatedButton.styleFrom(

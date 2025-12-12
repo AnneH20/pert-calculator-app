@@ -9,22 +9,22 @@ class TotalsSection extends StatefulWidget {
   const TotalsSection({super.key, required this.rows, this.onCalculate});
 
   @override
-  State<TotalsSection> createState() => _TotalsSectionState();
+  State<TotalsSection> createState() => TotalsSectionState();
 }
 
-class _TotalsSectionState extends State<TotalsSection> {
-  String? _includingDayResult;
-  String? _nextDayResult;
+class TotalsSectionState extends State<TotalsSection> {
+  String? includingDayResult;
+  String? nextDayResult;
 
   void clearResults() {
     setState(() {
-      _includingDayResult = null;
-      _nextDayResult = null;
+      includingDayResult = null;
+      nextDayResult = null;
     });
   }
 
-  // List of Ramsey Solutions holidays to exclude from PERT date calculations
-  final List<DateTime> _holidays = [
+  // List of holidays to exclude from PERT date calculations
+  final List<DateTime> holidays = [
     DateTime(2025, 12, 24), // Christmas Eve 2025
     DateTime(2025, 12, 25), // Christmas Day 2025
     DateTime(2025, 12, 26), // Christmas Celebration 2025
@@ -42,24 +42,24 @@ class _TotalsSectionState extends State<TotalsSection> {
     DateTime(2027, 1, 1), // New Year's Day 2027
   ];
 
-  double _averageOf(double Function(PertRow) getter) {
+  double averageOf(double Function(PertRow) getter) {
     final nonZero = widget.rows.where((r) => getter(r) > 0).toList();
     if (nonZero.isEmpty) return 0.0;
     final total = nonZero.fold(0.0, (s, r) => s + getter(r));
     return total / nonZero.length;
   }
 
-  DateTime _addBusinessDays(DateTime startDate, int businessDays, bool includeToday) {
+  DateTime addBusinessDays(DateTime startDate, int businessDays, bool includeToday) {
     DateTime current = startDate;
     int daysToAdd = businessDays;
 
-    if (includeToday && _isBusinessDay(current) && !_isHoliday(current)) {
+    if (includeToday && isBusinessDay(current) && !isHoliday(current)) {
       daysToAdd--;
     }
 
     while (daysToAdd > 0) {
       current = current.add(const Duration(days: 1));
-      if (_isBusinessDay(current) && !_isHoliday(current)) {
+      if (isBusinessDay(current) && !isHoliday(current)) {
         daysToAdd--;
       }
     }
@@ -67,56 +67,56 @@ class _TotalsSectionState extends State<TotalsSection> {
     return current;
   }
 
-  bool _isBusinessDay(DateTime date) {
+  bool isBusinessDay(DateTime date) {
     return date.weekday >= DateTime.monday && date.weekday <= DateTime.friday;
   }
 
-  bool _isHoliday(DateTime date) {
-    return _holidays.any((holiday) =>
+  bool isHoliday(DateTime date) {
+    return holidays.any((holiday) =>
         holiday.year == date.year &&
         holiday.month == date.month &&
         holiday.day == date.day);
   }
 
-  void _calculateIncludingDay(int pertEstimate) {
+  void calculateIncludingDay(int pertEstimate) {
     if (pertEstimate <= 0) {
       setState(() {
-        _includingDayResult = 'Invalid estimate';
+        includingDayResult = 'Invalid estimate';
       });
       return;
     }
 
     final today = DateTime.now();
-    final resultDate = _addBusinessDays(today, pertEstimate, true);
+    final resultDate = addBusinessDays(today, pertEstimate, true);
     final formatter = DateFormat('EEEE, MMMM d, y');
 
     setState(() {
-      _includingDayResult = formatter.format(resultDate);
+      includingDayResult = formatter.format(resultDate);
     });
   }
 
-  void _calculateNextDay(int pertEstimate) {
+  void calculateNextDay(int pertEstimate) {
     if (pertEstimate <= 0) {
       setState(() {
-        _nextDayResult = 'Invalid estimate';
+        nextDayResult = 'Invalid estimate';
       });
       return;
     }
 
     final today = DateTime.now();
-    final resultDate = _addBusinessDays(today, pertEstimate, false);
+    final resultDate = addBusinessDays(today, pertEstimate, false);
     final formatter = DateFormat('EEEE, MMMM d, y');
 
     setState(() {
-      _nextDayResult = formatter.format(resultDate);
+      nextDayResult = formatter.format(resultDate);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final optimistic = _averageOf((r) => r.optimistic);
-    final mostLikely = _averageOf((r) => r.mostLikely);
-    final pessimistic = _averageOf((r) => r.pessimistic);
+    final optimistic = averageOf((r) => r.optimistic);
+    final mostLikely = averageOf((r) => r.mostLikely);
+    final pessimistic = averageOf((r) => r.pessimistic);
 
     final pert = (optimistic + 4 * mostLikely + pessimistic) / 6;
     final pertRounded = pert.ceilToDouble();
@@ -137,18 +137,18 @@ class _TotalsSectionState extends State<TotalsSection> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildTotalRow('Optimistic Average:', optimistic),
-          _buildTotalRow('Most Likely Average:', mostLikely),
-          _buildTotalRow('Pessimistic Average:', pessimistic),
+          buildTotalRow('Optimistic Average:', optimistic),
+          buildTotalRow('Most Likely Average:', mostLikely),
+          buildTotalRow('Pessimistic Average:', pessimistic),
           const Divider(height: 24, thickness: 2, color: Colors.black),
-          _buildTotalRow('PERT Estimate:', pertRounded),
+          buildTotalRow('PERT Estimate:', pertRounded),
           const SizedBox(height: 16),
           Center(
             child: ElevatedButton(
               onPressed: pertInt > 0
                   ? () {
-                      _calculateIncludingDay(pertInt);
-                      _calculateNextDay(pertInt);
+                      calculateIncludingDay(pertInt);
+                      calculateNextDay(pertInt);
                       widget.onCalculate?.call();
                     }
                   : null,
@@ -163,7 +163,7 @@ class _TotalsSectionState extends State<TotalsSection> {
               ),
             ),
           ),
-          if (_includingDayResult != null && _nextDayResult != null) ...[
+          if (includingDayResult != null && nextDayResult != null) ...[
             const SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -186,7 +186,7 @@ class _TotalsSectionState extends State<TotalsSection> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _includingDayResult!,
+                        includingDayResult!,
                         style: const TextStyle(fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
@@ -212,7 +212,7 @@ class _TotalsSectionState extends State<TotalsSection> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _nextDayResult!,
+                        nextDayResult!,
                         style: const TextStyle(fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
@@ -227,7 +227,7 @@ class _TotalsSectionState extends State<TotalsSection> {
     );
   }
 
-  Widget _buildTotalRow(String label, double value) {
+  Widget buildTotalRow(String label, double value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
