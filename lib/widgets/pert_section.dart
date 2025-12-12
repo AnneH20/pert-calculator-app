@@ -64,7 +64,7 @@ class PertSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ...List.generate(rowCount, (i) => _buildTextField(context, i)),
-          const Divider(height: 24, thickness: 2),
+          const Divider(height: 24, thickness: 2, color: Colors.black),
           _buildRow('Total:', _total()),
           _buildRow('Average:', _average()),
         ],
@@ -77,7 +77,6 @@ class PertSection extends StatelessWidget {
     final controller = controllerGetter(row);
     final focusNode = focusNodeGetter(row);
 
-    // initialize controller text if it's empty and value exists
     if (controller.text.isEmpty && valueGetter(row) > 0) {
       controller.text = valueGetter(row).toString();
     }
@@ -106,19 +105,15 @@ class PertSection extends StatelessWidget {
               valueSetter(row, parsed);
             },
             onSubmitted: (_) {
-              // Move focus to next field
               final nextFocus = getNextFocusNode?.call(index);
               if (nextFocus != null) {
                 nextFocus.requestFocus();
-                // Check if we're moving to a different section
                 if (index == rows.length - 1) {
-                  // Last field in section - moving to next section
                   onSectionComplete?.call();
                 }
               } else {
                 FocusScope.of(context).unfocus();
               }
-              // call parent callback for any completion
               onComplete?.call();
             },
             onTapOutside: (_) {
