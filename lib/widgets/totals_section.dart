@@ -144,9 +144,9 @@ class TotalsSectionState extends State<TotalsSection> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                buildResultCard('Including Today:', includingDayResult!, Colors.blue),
+                buildResultCard('Starting Today:', includingDayResult!, Colors.blue),
                 const SizedBox(height: 12),
-                buildResultCard('Starting Next Day:', nextDayResult!, Colors.green),
+                buildResultCard('Starting Next Business Day:', nextDayResult!, Colors.green),
               ],
             ),
           ],
